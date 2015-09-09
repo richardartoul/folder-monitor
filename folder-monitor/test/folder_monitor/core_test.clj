@@ -2,6 +2,10 @@
   (:require [clojure.test :refer :all]
             [folder-monitor.core :refer :all]))
 
+(deftest rename-file-function
+  (testing "rename-file is a function"
+  (is (= (function? rename-file)))))
+
 (deftest rename-file-valid-name-test
   (testing "unit test for the rename-file function"
     (is (= (rename-file :create "test.txt") nil))))
