@@ -28,7 +28,12 @@
       (def file-to-create (str short-filename conflict-string extension ".sookasa"))
       ; rename the file
       (.renameTo (io/file full-filename) 
-                 (io/file file-to-create)))))
+                 (io/file file-to-create))
+      ; return the new filename if it was changed
+      file-to-create)
+      
+    ; returns nil if the file wasn't renamed
+    nil))
 
 ; main function that gets invoked when application starts
 (defn -main
