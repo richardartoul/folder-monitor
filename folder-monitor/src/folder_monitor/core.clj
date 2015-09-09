@@ -41,7 +41,7 @@
   [watch-folder & args]
   ; Starts watching the folder and listening for changes
   (start-watch [{:path watch-folder
-                 :event-types [:create :modify]
+                 :event-types [:create]
                  :bootstrap (fn [path] (println "Starting to watch " path))
-                 :callback rename-file
-                 :options {:recursive true}}]))
+                 :callback (fn (thread-call rename-file))
+                 :options {:recursive false}}]))
