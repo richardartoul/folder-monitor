@@ -2,6 +2,8 @@
 
 Folder-monitor is a simple program, written in [Clojure](http://clojure.org/) (a modern dialect of LISP), that monitors a specified folder for files whose name match a certain pattern, and renames them appropriately.
 
+**NOTE:** folder-monitor requires at least version 7 of the Java Runtime Environement. You can check which version is currently running on your machine by executing `java -version` in the command line. Anything above 1.7 will work properly.
+
 ## Installation
 
 The Clojure languages runs ontop of the JVM. As long as the host machine has Java installed, simply execute the jar file from the command line with the following command `PUT COMMAND HERE`. All of folder-monitor's dependcies are pre-packaged inside of the jar file.
