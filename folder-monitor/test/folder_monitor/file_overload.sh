@@ -5,6 +5,7 @@ PATHSOOKASA=$1
 NUMFILES=$2
 
 COUNTER=0
+# create number of files based on second command line argument
 for ((i=0; i < $NUMFILES; i++))
 do
   # Create dummy filename
@@ -14,6 +15,20 @@ do
   let COUNTER=COUNTER+1
 done
 
+# Use a simple regex to check if any improperly named files remain in the folder.
+# This regex is definitely not robust enough, but it serves its purpose for this simple test.
+# If folder-monitor is working properly, there should be none, and the script will echo "Test Passed"
 find $PATHSOOKASA -maxdepth 1 -type f -name "*).sookasa" | grep -q $PATHSOOKASA \
   && echo Test Failed - Not all files were renamed properly \
   || echo Test Passed - All files were properly renamed
+
+echo Cleaning up...
+
+# Remove all the created files
+COUNTER=0
+for ((i=0; i < $NUMFILES; i++))
+do
+  FILENAME="file$COUNTER(Richie's conflicted copy 2015-09-08).ext.sookasa"
+  rm "$PATHSOOKASA/$FILENAME"
+  let COUNTER=COUNTER+1
+done

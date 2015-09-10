@@ -44,4 +44,5 @@
                  :event-types [:create]
                  :bootstrap (fn [path] (println "Starting to watch " path))
                  :callback rename-file
-                 :options {:recursive false}}]))
+                 ; recursively monitor subdirectories
+                 :options {:recursive true}}]))
