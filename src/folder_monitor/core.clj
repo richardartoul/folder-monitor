@@ -14,6 +14,8 @@
   "Renames incorrectly named files to their proper form"
   [event filename]
   
+  (println event filename)
+  
   ; only do something if the regex pattern is found
   (if (re-matches sookasa-regex filename)
     ; destructuring to break apart regex groups
