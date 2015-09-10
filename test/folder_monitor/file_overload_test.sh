@@ -7,9 +7,10 @@ NUMFILES=$2
 # Use a simple regex to check if any improperly named files remain in the folder.
 # This regex is definitely not robust enough, but it serves its purpose for this simple test.
 # If folder-monitor is working properly, there should be none, and the script will echo "Test Passed"
-find $PATHSOOKASA -maxdepth 1 -type f -name "*).sookasa" | grep -q $PATHSOOKASA \
-  && echo Test Failed - Not all files were renamed properly \
-  || echo Test Passed - All files were properly renamed
+# -maxdepth 2 means that it will also searched within the nested directory
+find $PATHSOOKASA -maxdepth 2 -type f -name "*).sookasa" | grep -q $PATHSOOKASA \
+  && echo Simple Test Failed - Not all files were renamed properly \
+  || echo Simple Test Passed - All files were properly renamed
 
 echo Cleaning up...
 
@@ -21,3 +22,6 @@ do
   rm "$PATHSOOKASA/$FILENAME"
   let COUNTER=COUNTER+1
 done
+
+# removed nested folder
+rm -r "$PATHSOOKASA/nested"

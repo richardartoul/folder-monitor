@@ -14,3 +14,19 @@ do
   cp ./test_files/testImage.jpg "$PATHSOOKASA/$FILENAME"
   let COUNTER=COUNTER+1
 done
+
+# Same as above, but first creates a new folder inside the monitored folders
+# and then copies files into nested folder
+# This tests to make sure that the program properly registers new event listeners
+# for subdirectories that are added after the program has started running
+# Could have included this in the previous loop, but broke it out for clarity
+mkdir "$PATHSOOKASA/nested"
+let COUNTER=0
+for ((i=0; i < $NUMFILES; i++))
+do
+  # Create dummy filename
+  FILENAME="file$COUNTER.ext(Richie's conflicted copy 2015-09-08).sookasa"
+  # Copy test file into sookasa folder with dummy filename
+  cp ./test_files/testImage.jpg "$PATHSOOKASA/nested/$FILENAME"
+  let COUNTER=COUNTER+1
+done

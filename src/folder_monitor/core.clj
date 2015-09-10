@@ -1,3 +1,11 @@
+; Note: This program does not account for it files that are already improperly named
+; in the folder before the application starts. I decided to leave that feature out
+; and focus on this application simply as a "monitoring" program. That being said
+; implementing a scan of the entire directory on startup would be trivial.
+; Simply use the (file-seq dir) function to get a list of all files in the directory
+; and then run them all through the rename-file function. Those that match the regular
+; expression pattern will be automatically renamed and those that don't will be left untouched.
+
 ; clojure-watch is a simple wrapper around the Java 7 WatchEvent API
 ; clojure.java.io is the clojure wrapper around the Java filesystem API
 (ns folder-monitor.core
@@ -46,11 +54,13 @@
   [event filename]
   
   (if (.isDirectory (io/file filename))
-     (start-watch [{:path filename
-                    :event-types [:create :modify]
+      (do 
+        (start-watch [{:path filename
+                    :event-types [:create]
                     :bootstrap (fn [path] (println "Starting to watch " filename))
                     :callback process-file-event
                     :options {:recursive true}}])
+        (str "Watch added to " filename))
      (rename-file event filename)))
 
 
@@ -60,7 +70,7 @@
   [watch-folder & args]
   ; Starts watching the folder and listening for changes
   (start-watch [{:path watch-folder
-                 :event-types [:create :modify]
+                 :event-types [:create]
                  :bootstrap (fn [path] (println "Starting to watch " path))
                  :callback process-file-event
                  ; recursively monitor subdirectories
