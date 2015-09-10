@@ -43,5 +43,5 @@
   (start-watch [{:path watch-folder
                  :event-types [:create]
                  :bootstrap (fn [path] (println "Starting to watch " path))
-                 :callback (fn (thread-call rename-file))
+                 :callback rename-file
                  :options {:recursive false}}]))
