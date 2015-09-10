@@ -4,6 +4,8 @@ PATHSOOKASA=$1
 # capture second command line argument (number of files to create)
 NUMFILES=$2
 
+mkdir "$PATHSOOKASA/nested"
+
 COUNTER=0
 # create number of files based on second command line argument
 for ((i=0; i < $NUMFILES; i++))
@@ -15,12 +17,10 @@ do
   let COUNTER=COUNTER+1
 done
 
-# Same as above, but first creates a new folder inside the monitored folders
-# and then copies files into nested folder
+# Same as above, but copies files into folder nested within monitored folder
 # This tests to make sure that the program properly registers new event listeners
 # for subdirectories that are added after the program has started running
 # Could have included this in the previous loop, but broke it out for clarity
-mkdir "$PATHSOOKASA/nested"
 let COUNTER=0
 for ((i=0; i < $NUMFILES; i++))
 do
@@ -30,3 +30,5 @@ do
   cp ./test_files/testImage.jpg "$PATHSOOKASA/nested/$FILENAME"
   let COUNTER=COUNTER+1
 done
+
+echo "$NUMFILES Files created!"

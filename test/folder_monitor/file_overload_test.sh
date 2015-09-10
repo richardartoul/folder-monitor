@@ -9,8 +9,8 @@ NUMFILES=$2
 # If folder-monitor is working properly, there should be none, and the script will echo "Test Passed"
 # -maxdepth 2 means that it will also searched within the nested directory
 find $PATHSOOKASA -maxdepth 2 -type f -name "*).sookasa" | grep -q $PATHSOOKASA \
-  && echo Simple Test Failed - Not all files were renamed properly \
-  || echo Simple Test Passed - All files were properly renamed
+  && echo Overload Test Failed - Not all files were renamed properly \
+  || echo Overload Test Passed - All files were properly renamed
 
 echo Cleaning up...
 
@@ -20,6 +20,7 @@ for ((i=0; i < $NUMFILES; i++))
 do
   FILENAME="file$COUNTER(Richie's conflicted copy 2015-09-08).ext.sookasa"
   rm "$PATHSOOKASA/$FILENAME"
+  rm "$PATHSOOKASA/nested/$FILENAME"
   let COUNTER=COUNTER+1
 done
 

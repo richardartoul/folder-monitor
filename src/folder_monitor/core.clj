@@ -17,11 +17,14 @@
 ; also includes capturing groups so that filenames can be rearranged programatically
 (def sookasa-regex #"([^.]*)(\..+)(\(.*conflicted copy \d{4}-\d{2}-\d{2}\))\.sookasa")
 
+(defn logger
+  "Appends input to log file and adds newline"
+  [log-entry]
+  (spit "folder-monitor-log.txt" (str log-entry "\n") :append true))
+
 (defn rename-file
   "Renames incorrectly named files to their proper form"
   [event filename]
-  
-  (println event filename)
   
   ; only do something if the regex pattern is found
   (if (re-matches sookasa-regex filename)
@@ -37,9 +40,11 @@
       (.renameTo (io/file full-filename) 
                  (io/file file-to-create))
       ; construct the log entry
-      (def log-line (str filename " was renamed to " file-to-create " at " (new java.util.Date) "\n"))
+      (def log-line (str filename " was renamed to " file-to-create " at " (new java.util.Date)))
       ; append the entry to the log file
-      (spit "folder-monitor-log.txt" log-line :append true)
+      (logger log-line)
+      ; print log entry to console as well
+      (println log-line)
       ; return the new filename if it was changed
       file-to-create)
       
@@ -57,9 +62,13 @@
       (do 
         (start-watch [{:path filename
                     :event-types [:create]
-                    :bootstrap (fn [path] (println "Starting to watch " filename))
+                    :bootstrap (fn [path]
+                                 (def log-entry (str "Starting to watch " filename)) 
+                                 (println log-entry)
+                                 (logger log-entry))
                     :callback process-file-event
                     :options {:recursive true}}])
+        ; Return for testing purposes
         (str "Watch added to " filename))
      (rename-file event filename)))
 
@@ -71,7 +80,10 @@
   ; Starts watching the folder and listening for changes
   (start-watch [{:path watch-folder
                  :event-types [:create]
-                 :bootstrap (fn [path] (println "Starting to watch " path))
+                 :bootstrap (fn [path] 
+                              (def log-entry (str "Starting to watch " path)) 
+                              (println log-entry)
+                              (logger log-entry))
                  :callback process-file-event
                  ; recursively monitor subdirectories
                  :options {:recursive true}}]))
