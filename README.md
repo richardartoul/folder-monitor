@@ -52,7 +52,11 @@ First, I wrote a few simple unit tests that simply make sure the renaming behavi
 
 Second, I wanted to stress test the application and make sure that it would handle large numbers of files being added to the monitored folder at once. I decided to implement this test using a bash script because I didn't want users to have to use Clojure/Leiningen to run this test. Also, Bash lends itself nicely to this type of test.
 
-The bash script [file_overload.sh](test/test_files/file_overload.sh) copies a small (11kb) test image file into the monitored folder x number of times in rapid succession (I tested it up to x = 2000). It then checks to see if all the files were properly renamed, prints a test success/failure result, and then removes the test files from the folder.
+The bash script [file_overload.sh](test/test_files/file_overload.sh) copies a small (11kb) test image file into the monitored folder x number of times in rapid succession (I tested it up to x = 2000).
+
+The companion script [file_overload_test.sh](test/test_files/file_overload.sh) checks to see if all the files were properly renamed, prints a test success/failure result, and then removes the test files from the folder.
+
+These two scripts were originally implemented as one script, however, I split them into two separate scripts due to incompatibilities between different operating systems. For example, including them as one script worked fine on Linux because the filesystem events are properly supported, however, on OSX the Java Watch Service will sometimes have to fall back on polling (it does so gracefully and silently) and there was no easy way to wait until the folder-monitor application had properly renamed all the files before running the portion of the script that checks the folder. With the two scripts as separate files, the developer can use the first script to bombard the folder with many new files, and then once they've determined a sufficient amount of time has passed for folder-monitor to rename all the files (a few milliseconds in most cases), execute the companion script to make sure all the files were properly renamed and then perform automatical cleanup (removal of the test files).
 
 ### Running Tests
 
@@ -69,7 +73,9 @@ The bash script [file_overload.sh](test/test_files/file_overload.sh) copies a sm
 
 1. Make sure folder-monitor is running
 2. Navigate to test/folder_monitor within the file structure
-3. Execute the file_overload.sh script with two command line arguments. The first should be the absolute path to the Sookasa folder. The second should be the number of times the test file gets copied into the Sookasa folder.
+3. Make the two files "file_overload.sh" and "file_overload_test.sh" executable by running the following commands in the terminal: `chmod +x file_overload.sh` and `chmod +x file_overload_test.sh`
+4. Execute the file_overload.sh script with two command line arguments. The first should be the absolute path to the monitored folder. The second should be the number of times the test file gets copied into the Sookasa folder.
+5. Once the files have been copied, execute the file_overload_test.sh script with the exact same command line arguments used in the step above.
 
 ![Folder-Monitor Stress Tests](resources/stress_tests.png)
 
