@@ -13,8 +13,6 @@
 (defn rename-file
   "Renames incorrectly named files to their proper form"
   [event filename]
-  ; print the event and filename to the console - change this to a log file
-  (println event filename)
   
   ; only do something if the regex pattern is found
   (if (re-matches sookasa-regex filename)
@@ -29,6 +27,10 @@
       ; rename the file
       (.renameTo (io/file full-filename) 
                  (io/file file-to-create))
+      ; construct the log entry
+      (def log-line (str filename " was renamed to " file-to-create " at " (new java.util.Date) "\n"))
+      ; append the entry to the log file
+      (spit "folder-monitor-log.txt" log-line :append true)
       ; return the new filename if it was changed
       file-to-create)
       

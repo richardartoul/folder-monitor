@@ -96,6 +96,6 @@ I didn't implement either of these solutions because they both seemed like overk
 ## Potential Improvements
 
 1. Add support for concurrency / parallelism or non-blocking IO
-2. Create a genuine log file for all activity instead of simply printing to the console
+2. Using a simple text file for logging purposes has the simple advantage of being easy to read and parse/filter using traditional UNIX utilities, however, if I was expecting heavy monitoring / debugging of this program I might consider converting the logging functionality to a simple SQLite database.
 3. Perform a single check of every file in the monitored folder on program start so that files that are improperly named and are already present in the folder are renamed, not just files that are added/changed after the program has started running.
 4. Improve the robustness of the regular expressions used to identify improperly named folders. I would also recommend a lot more tests surrounding this particular feature. The regular expressions used throughout folder-monitor are the "bare minimum" to get it working and could be made much more robust.
