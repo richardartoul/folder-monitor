@@ -6,9 +6,7 @@ Folder-monitor is a simple program, written in [Clojure](http://clojure.org/) (a
 
 ## Installation
 
-The Clojure languages runs ontop of the JVM. As long as the host machine has Java installed, simply execute the jar file from the command line with the following command `PUT COMMAND HERE`. All of folder-monitor's dependcies are pre-packaged inside of the jar file.
-
-Alternatively, if you'd like to build the jar file on your own, [DO THIS]
+The Clojure languages runs ontop of the JVM. As long as the host machine has Java installed, simply execute the jar file from the command line. All of folder-monitor's dependicies are pre-packaged inside of the jar file.
 
 ## Usage
 
@@ -16,11 +14,11 @@ Folder-monitor is packaged as jar file with all of its dependencies included. It
 
 `$ java -jar folder-monitor-0.1.0-standalone.jar <path to sookasa folder>`
 
-## Options
+This command works on Linux, OSX, and Windows (as long as the PATH environment variable is configured properly).
 
-[Consider adding recurse as an option]
+**Note:** On Windows, make sure that the "view file extensions" settings is enabled in the file viewer, otherwise it may be difficult to determine if the program is working as intended.
 
-## Examples
+### Examples
 
 `$ java -jar folder-monitor-0.1.0-standalone.jar /home/richie/Desktop/sookasa`
 
@@ -81,7 +79,18 @@ These two scripts were originally implemented as one script, however, I split th
 
 ![Folder-Monitor Stress Tests](resources/stress_tests.png)
 
+## Development
+
+If you want to develop the folder-monitor program further, the easiest way is to install and use [Leiningen](http://leiningen.org/). With Leiningen installed, changing the source code is easy:
+
+1. Clone this repo
+2. Make any modifications that you like to core.clj
+3. Inside the project directory, execute `lein run <options>` to compile and run the program
+4. Inside the project directory, execute `lein uberjar` to create an executable jar file that can be distributed to others
+
 ## Bugs
+
+### Large Numbers of Small Files
 
 One of the issues I found while stress testing the application is that it will fail if too many files are added to the folder at once. The limit (on my system) occurred when I tried to simultaneously add more than 500 files to the folder in quick succession, with each file being only a single line in length. I believe this issue is caused simply by blocking IO. Since the files are so small, they're added to the folder before the program can process each event and trigger a rename. Eventually an event is triggered and it encounters a blocked thread, causing a silent failure.
 

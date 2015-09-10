@@ -9,7 +9,6 @@
 ; also includes capturing groups so that filenames can be rearranged programatically
 (def sookasa-regex #"([^.]*)(\..+)(\(.*conflicted copy \d{4}-\d{2}-\d{2}\))\.sookasa")
 
-; callback function is called everytime a file is created or modified
 (defn rename-file
   "Renames incorrectly named files to their proper form"
   [event filename]
@@ -39,14 +38,30 @@
     ; returns nil if the file wasn't renamed
     nil))
 
+; callback function is called everytime a file is created or modified
+(defn process-file-event
+  "Determine if new file is a file or folder. 
+  If its a folder, adds it to the list of folders to watch. 
+  Else handle renaming."
+  [event filename]
+  
+  (if (.isDirectory (io/file filename))
+     (start-watch [{:path filename
+                    :event-types [:create :modify]
+                    :bootstrap (fn [path] (println "Starting to watch " filename))
+                    :callback process-file-event
+                    :options {:recursive true}}])
+     (rename-file event filename)))
+
+
 ; main function that gets invoked when application starts
 (defn -main
   ; expects one argument: Which path to watch for file changes
   [watch-folder & args]
   ; Starts watching the folder and listening for changes
   (start-watch [{:path watch-folder
-                 :event-types [:create]
+                 :event-types [:create :modify]
                  :bootstrap (fn [path] (println "Starting to watch " path))
-                 :callback rename-file
+                 :callback process-file-event
                  ; recursively monitor subdirectories
                  :options {:recursive true}}]))
