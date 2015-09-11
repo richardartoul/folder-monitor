@@ -81,7 +81,7 @@ The two bash scripts above work for Linux and OSX. For windows, I wrote a simple
 3. Navigate to the local repository on your machine in the CLI
 4. Execute `lein test`
 
-![Folder-Monitor Unit Tests](resources/unit_tests.png)
+![Folder-Monitor Unit Tests](documentation/unit_tests.png)
 
 #### Stress Tests
 
@@ -93,7 +93,7 @@ The two bash scripts above work for Linux and OSX. For windows, I wrote a simple
 4. Execute the file_overload.sh script with two command line arguments. The first should be the absolute path to the monitored folder. The second should be the number of times the test file gets copied into the Sookasa folder.
 5. Once the files have been copied, execute the file_overload_test.sh script with the exact same command line arguments used in the step above.
 
-![Folder-Monitor Stress Tests](resources/stress_tests.png)
+![Folder-Monitor Stress Tests](documentation/stress_tests.png)
 
 **Example**: 
 
