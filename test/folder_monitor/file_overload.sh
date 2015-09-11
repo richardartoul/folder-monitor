@@ -5,6 +5,7 @@ PATHSOOKASA=$1
 NUMFILES=$2
 
 mkdir "$PATHSOOKASA/nested"
+sleep 2
 
 COUNTER=0
 # create number of files based on second command line argument

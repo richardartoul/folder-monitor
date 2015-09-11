@@ -1,1 +1,1 @@
-([:dependencies ([org.clojure/clojure "1.7.0"] [clojure-watch/clojure-watch "LATEST"])])
+([:dependencies ([org.clojure/clojure "1.7.0"] [clojure-watch/clojure-watch "LATEST"] [hawk/hawk "0.2.5"])])

@@ -11,7 +11,7 @@
 (ns folder-monitor.core
   (:gen-class)
   (:require [clojure-watch.core :refer [start-watch]])
-  (:require [clojure.java.io :as io]))
+  (:require [clojure.java.io :as io] [hawk.core :as hawk]))
 
 ; Compiler boilerplate so functions can be declared in any order
 (declare logger)
@@ -33,22 +33,17 @@
 (defn watch-folder
   "Adds a new listener and associated callback for filesystem events at a specified folder"
   [path]
-  (start-watch [{:path path
-                 :event-types [:create]
-                 :bootstrap (fn [path] 
-                              (def log-entry (str "Starting to watch " path)) 
-                              (println log-entry)
-                              (logger log-entry))
-                 :callback process-file-event
-                 ; recursively monitor subdirectories
-                 :options {:recursive true}}]))
+  (hawk/watch! [{:paths [path]
+                 :handler process-file-event}]))
 
 ; callback function is called everytime a file is created or modified
 (defn process-file-event
   "Determine if new file is a file or folder. 
   If its a folder, adds it to the list of folders to watch. 
   Else handle renaming."
-  [event filename]
+  [context {event :kind file :file}]
+  
+  (def filename (.toString file))
   
   (if (.isDirectory (io/file filename))
       (do
