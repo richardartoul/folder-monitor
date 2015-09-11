@@ -14,6 +14,8 @@ Folder-monitor is packaged as jar file with all of its dependencies included. It
 
 `$ java -jar folder-monitor-0.1.0-standalone.jar <path to sookasa folder>`
 
+The jar file is already pre-built in the repository. You can find it by navigating to target/uberjar.
+
 This command works on Linux, OSX, and Windows (as long as the java PATH environment variable is configured properly).
 
 **Note:** On Windows, make sure that the "view file extensions" settings is enabled in the file viewer, otherwise it may be difficult to determine if the program is working as intended.
