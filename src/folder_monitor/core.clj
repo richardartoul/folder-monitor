@@ -36,7 +36,6 @@
   (hawk/watch! [{:paths [path]
                  :handler process-file-event}])
   (def log-entry (str "Starting to watch " path))
-  (println log-entry)
   (logger log-entry))
 
 ; callback function is called everytime a file is created or modified
@@ -55,8 +54,7 @@
         ; Return for testing purposes
         (str "Watch added to " filename))
      ; Else pass the file to the rename function
-     (if (= event :create)
-     (rename-file event filename))))
+     (rename-file event filename)))
 
 (defn rename-file
   "Renames incorrectly named files to their proper form"
@@ -75,19 +73,15 @@
       ; rename the file
       (.renameTo (io/file full-filename) 
                  (io/file file-to-create))
-      ; construct the log entry
-      (def log-line (str filename " was renamed to " file-to-create " at " (new java.util.Date)))
-      ; append the entry to the log file
-      (logger log-line)
-      ; print log entry to console as well
-      (println log-line)
       ; return the new filename if it was changed
       file-to-create)
       
     ; returns nil if the file wasn't renamed
     nil))
 
+; Originally implemented a logging solution, but disabled because filesystem triggers duplicate events
 (defn logger
   "Appends input to log file and adds newline"
   [log-entry]
-  (spit "folder-monitor-log.txt" (str log-entry "\n") :append true))
+  (spit "folder-monitor-log.txt" (str log-entry "\n") :append true)
+  (println log-entry))

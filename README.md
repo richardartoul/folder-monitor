@@ -24,19 +24,31 @@ This command works on Linux, OSX, and Windows (as long as the PATH environment v
 
 ## Design Decisions
 
-### Clojure Language
-
-I chose to write folder-monitor in Clojure for a few reasons. First, I decided that I did not want to take a polling approach to checking the folder for incorrectly named files because this could become a huge performance issue with folders that have many files in them. Instead, I decided to tap into filesystem events to determine when a file was added or modified inside of the Sookasa folder. Clojure, being a primarily functional programming language, lends itself much more elegantly to solving this type of asynchronous, event-based problem than other languages I considered like Python and Java.
-
-Second, I didn't want to have to write platform-specific code for interacting with the filesystem and listening for events. After doing some investigation online, I found that many of the python libraries for managing filesystem events were no longer maintained or had many known issues. The Java Watch Service API, on the other hand, seemed to be well documented, robust, and cross-platform. Since the Clojure language runs on top of the JVM, I was able to use (with a small library that basically serves as a Clojure wrapper around the Java Watch Service API) the same code for Linux, OSX, and Windows, despite the fact that they each have different filesystem APIs.
-
-Finally, Clojure is a particularly expressive language and because of that the actual implementation of folder-monitor is approximately 15 lines of non-boilerplate code that can easily be reasoned about.
-
-### Filesystem Events vs. Polling
-
 I chose not to use polling because I was worried that if the user was storing a large number of files, indexing the files on a regular basis would quickly become a bottleneck. The file-system events approach avoids this issue because files are only changed when they are added to the folder, or any kind of modification happens to a file that already inside the folder.
 
-The downside of the file-system event approach is that it doesn't affect files that are already improperly named in the folder. Only files that are added or modified are checked. However, this problem could easily be solved by performing a single index of all the files in the folder when the program starts, and then using filesystem events for all subsequent actions. 
+The downside of the file-system event approach is that it doesn't affect files that are already improperly named in the folder. Only files that are added or modified are checked. However, this problem could easily be solved by performing a single index of all the files in the folder when the program starts, and then using filesystem events for all subsequent actions.
+
+Once I had settled upon using filesystem-events, the next question became which library should I use to monitor filesystem events cross-platform. This turned out to be much harder than I anticipated. While there are tons of libraries out there for that purpose, I had two specific criteria I was looking for:
+
+1. Works well cross-platform
+2. Really fast
+
+I wrote test scripts in Bash and PowerShell that allowed me to copy test files into a target directory 100's to 1000's of times, and then check to see if any of them failed to be renamed (using a simple regex). Using these scripts, I tested several different filesystem event monitoring libraries, including: Gaze, Filesystem WatchService (Java 7), Node native fs.watch, watchdog, etc. The libraries that I tested were all written in either Clojure / Java, Python, or JavaScript. As a result, I actually ended up implementing naive versions of the application in Clojure, Python, and Javascript respectively. Ultimately I settled upon Clojure as my final choice for reasons that I explain below.
+
+While it definitely has its issues, the Java 7 Filesystem WatchService seemed to be the most performant and stable accross platforms. The only issue was that it doesn't have support for native filesystem events in OSX, but instead falls back on interval polling. The generally accepted way of solving this problem in the Java community is to use a library called Barbary WatchService which is able to tap into the OSX native filesystem events.
+
+Since I wrote the final application in Clojure, I used a library called Hawk. Hawk provides two things that made it a good choice for this application:
+
+1. On Linux and Windows, it simply providers a Clojure wrapper around the Java 7 Filesystem WatchService
+2. On OSX, it uses the Barbary WatchService instead
+
+Thus, by using Clojure in combination with Hawk, I was able to get all the benefits of Java's cross-platform capabilities, native filesystem events on Linux, OSX, and Windows, as well as the benefits of using a functionally-oriented language like Clojure.
+
+### Clojure Language
+
+I chose to write folder-monitor in Clojure for a few reasons. First, since Clojure is primarily a functional programming language, it lends itself better to solving asynchronous, event-based problems than the other languages I considered like Python and Java. I also thought that Clojure, being a primarily functional programming language, lended itself better to solving this type of asynchronous, event-based problem than other languages I considered like Python and Java. I thought that a combination of JavaScript / node might also be a good fit as JavaScript is also a great language for functional programming and node was built from the ground-up with asynchronous IO in mind, however, Node's filesystem-event monitoring capabilities turned out to be a bit of a mess, even with industry-standard libraries like Gaze. 
+
+Second, I didn't want to have to write platform-specific code for interacting with the filesystem and listening for events. Since Clojure runs on the Java Virtual Machine, I was able to use the Java WatchService API which was the most robust of the libraries that I tested. As a result, I was able to use (with a small library that basically serves as a Clojure wrapper around the Java WatchService and Barbary WatchService) the same code for Linux, OSX, and Windows, despite the fact that they each have different filesystem APIs.
 
 ## Testing
 
@@ -46,17 +58,17 @@ I took a two-pronged approach to testing for the folder-monitor application.
 
 #### Unit Tests
 
-First, I wrote a few simple unit tests that simply make sure the renaming behavior and regex for identifying improperly named files work properly. These tests are written in Clojure and can be executed using Leiningen as described below.
+I wrote a few simple unit tests that verify that each Clojure function is doing what its supposed to, including the regular expressions. These tests are written in Clojure and can be executed using Leiningen as described below.
 
 #### Stress Tests
+ 
+I wanted to stress test the application and make sure that it would handle large numbers of files being added to the monitored folder at once. I decided to implement these tests using Bash / PowerShell scripts because I was testing several different libraries in different languages, and I wanted the tests to be language/technology independent.
 
-Second, I wanted to stress test the application and make sure that it would handle large numbers of files being added to the monitored folder at once. I decided to implement this test using a bash script because I didn't want users to have to use Clojure/Leiningen to run this test. Also, Bash lends itself nicely to this type of test.
-
-The bash script [file_overload.sh](test/test_files/file_overload.sh) copies a small (11kb) test image file into the monitored folder x number of times in rapid succession (I tested it up to x = 2000).
+The bash script [file_overload.sh](test/test_files/file_overload.sh) copies three test files (an image, a word document, and a video) into the monitored folder X number of times in rapid succession. This script also creates a folder inside the monitored folder, and then copies the test files into that folder X times as well. This makes sure that the application can properly detect a new folder being created, and add it to the list of folders that are being watched (most filesystem event libraries do not provide this feature out of the box so I take care of it at an application level).
 
 The companion script [file_overload_test.sh](test/test_files/file_overload.sh) checks to see if all the files were properly renamed, prints a test success/failure result, and then removes the test files from the folder.
 
-These two scripts were originally implemented as one script, however, I split them into two separate scripts due to incompatibilities between different operating systems. For example, including them as one script worked fine on Linux because the filesystem events are properly supported, however, on OSX the Java Watch Service will sometimes have to fall back on polling (it does so gracefully and silently) and there was no easy way to wait until the folder-monitor application had properly renamed all the files before running the portion of the script that checks the folder. With the two scripts as separate files, the developer can use the first script to bombard the folder with many new files, and then once they've determined a sufficient amount of time has passed for folder-monitor to rename all the files (a few milliseconds in most cases), execute the companion script to make sure all the files were properly renamed and then perform automatical cleanup (removal of the test files).
+The two bash scripts above work for Linux and OSX. For windows, I wrote a simple PowerShell script that does the same thing that file_overload.sh does, but I did not write an equivalent to file_overload_test in PowerShell. After the files have been copied into the folder in Windows using the PowerShell script, the renaming has to be manually verified.
 
 ### Running Tests
 
@@ -71,13 +83,27 @@ These two scripts were originally implemented as one script, however, I split th
 
 #### Stress Tests
 
-1. Make sure folder-monitor is running
+##### Linux / OSX
+
+1. Make sure folder-monitor application is running
 2. Navigate to test/folder_monitor within the file structure
 3. Make the two files "file_overload.sh" and "file_overload_test.sh" executable by running the following commands in the terminal: `chmod +x file_overload.sh` and `chmod +x file_overload_test.sh`
 4. Execute the file_overload.sh script with two command line arguments. The first should be the absolute path to the monitored folder. The second should be the number of times the test file gets copied into the Sookasa folder.
 5. Once the files have been copied, execute the file_overload_test.sh script with the exact same command line arguments used in the step above.
 
 ![Folder-Monitor Stress Tests](resources/stress_tests.png)
+
+**Example**: 
+
+`./file_overload.sh /home/richie/Desktop/sookasa 100`
+
+`./file_overload_test.sh /home/richie/Desktop/sookasa 100`
+
+##### Windows
+
+1. Make sure that PowerShell has permission to execute PowerShell scripts
+2. Navigate to test/folder_monitor within the file structure
+3. Execute the file_overload.ps1 script with two command line arguments. The first should be the absolute path to the monitored folder. The second should be t he number of times the test file gets copied into the Sookasa folder.
 
 ## Development
 

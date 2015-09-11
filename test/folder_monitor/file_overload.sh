@@ -1,7 +1,7 @@
 #!/bin/bash
 # capture first command line argument (folder to overload with files)
 PATHSOOKASA=$1
-# capture second command line argument (number of files to create)
+# capture second command line argument (number of times to copy test files)
 NUMFILES=$2
 
 mkdir "$PATHSOOKASA/nested"
@@ -39,4 +39,4 @@ do
   # sleep 0.05
 done
 
-echo "$NUMFILES Files created!"
+echo "Test files copied $NUMFILES times!"
