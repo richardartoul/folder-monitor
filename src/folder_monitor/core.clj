@@ -47,17 +47,18 @@
   
   (println event file)
   
-  (if (or (= event :modify) (= event :create))
     (do
       (def filename (.toString file))
       
       (if (.isDirectory (io/file filename))
           (do
             ; if its a directory, watch it for events 
-            (watch-folder filename)
+            (if (= event :create)
+            (watch-folder filename))
             ; Return for testing purposes
             (str "Watch added to " filename))
          ; Else pass the file to the rename function
+        (if (or (= event :modify) (= event :create))
          (rename-file event filename)))))
   
 
