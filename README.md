@@ -14,7 +14,7 @@ Folder-monitor is packaged as jar file with all of its dependencies included. It
 
 `$ java -jar folder-monitor-0.1.0-standalone.jar <path to sookasa folder>`
 
-This command works on Linux, OSX, and Windows (as long as the PATH environment variable is configured properly).
+This command works on Linux, OSX, and Windows (as long as the java PATH environment variable is configured properly).
 
 **Note:** On Windows, make sure that the "view file extensions" settings is enabled in the file viewer, otherwise it may be difficult to determine if the program is working as intended.
 
@@ -24,7 +24,7 @@ This command works on Linux, OSX, and Windows (as long as the PATH environment v
 
 ## Design Decisions
 
-I chose not to use polling because I was worried that if the user was storing a large number of files, indexing the files on a regular basis would quickly become a bottleneck. The file-system events approach avoids this issue because files are only changed when they are added to the folder, or any kind of modification happens to a file that already inside the folder.
+I chose not to use polling because I was worried that if the user was storing a large number of files, indexing the files on a regular basis would quickly become a bottleneck. The file-system events approach avoids this issue because files are only changed when they are added to the folder, or any kind of modification happens to a file that is already inside the folder.
 
 The downside of the file-system event approach is that it doesn't affect files that are already improperly named in the folder. Only files that are added or modified are checked. However, this problem could easily be solved by performing a single index of all the files in the folder when the program starts, and then using filesystem events for all subsequent actions.
 
@@ -46,7 +46,7 @@ Thus, by using Clojure in combination with Hawk, I was able to get all the benef
 
 ### Clojure Language
 
-I chose to write folder-monitor in Clojure for a few reasons. First, since Clojure is primarily a functional programming language, it lends itself better to solving asynchronous, event-based problems than the other languages I considered like Python and Java. I also thought that Clojure, being a primarily functional programming language, lended itself better to solving this type of asynchronous, event-based problem than other languages I considered like Python and Java. I thought that a combination of JavaScript / node might also be a good fit as JavaScript is also a great language for functional programming and node was built from the ground-up with asynchronous IO in mind, however, Node's filesystem-event monitoring capabilities turned out to be a bit of a mess, even with industry-standard libraries like Gaze. 
+I chose to write folder-monitor in Clojure for a few reasons. First, since Clojure is primarily a functional programming language, it lends itself better to solving asynchronous, event-based problems than the other languages I considered like Python and Java. I also thought that Clojure, being a primarily functional programming language, lended itself better to solving this type of asynchronous, event-based problem than other languages I considered like Python and Java. I thought that a combination of JavaScript / Node.js might also be a good fit as JavaScript is also a great language for functional programming and node was built from the ground-up with asynchronous IO in mind, however, Node's filesystem-event monitoring capabilities just weren't robust enough, even with industry-standard libraries like Gaze. 
 
 Second, I didn't want to have to write platform-specific code for interacting with the filesystem and listening for events. Since Clojure runs on the Java Virtual Machine, I was able to use the Java WatchService API which was the most robust of the libraries that I tested. As a result, I was able to use (with a small library that basically serves as a Clojure wrapper around the Java WatchService and Barbary WatchService) the same code for Linux, OSX, and Windows, despite the fact that they each have different filesystem APIs.
 
@@ -68,7 +68,7 @@ The bash script [file_overload.sh](test/test_files/file_overload.sh) copies thre
 
 The companion script [file_overload_test.sh](test/test_files/file_overload.sh) checks to see if all the files were properly renamed, prints a test success/failure result, and then removes the test files from the folder.
 
-The two bash scripts above work for Linux and OSX. For windows, I wrote a simple PowerShell script that does the same thing that file_overload.sh does, but I did not write an equivalent to file_overload_test in PowerShell. After the files have been copied into the folder in Windows using the PowerShell script, the renaming has to be manually verified.
+The two bash scripts above work for Linux and OSX. For windows, I wrote a simple PowerShell script that does the same thing that file_overload.sh does, but I did not write an equivalent to file_overload_test in PowerShell. After the files have been copied into the folder in Windows using the PowerShell script, the renaming has to be verified manually by introspection.
 
 ### Running Tests
 
@@ -103,7 +103,11 @@ The two bash scripts above work for Linux and OSX. For windows, I wrote a simple
 
 1. Make sure that PowerShell has permission to execute PowerShell scripts
 2. Navigate to test/folder_monitor within the file structure
-3. Execute the file_overload.ps1 script with two command line arguments. The first should be the absolute path to the monitored folder. The second should be t he number of times the test file gets copied into the Sookasa folder.
+3. Execute the file_overload.ps1 script with two command line arguments. The first should be the absolute path to the monitored folder. The second should be the number of times the test file gets copied into the Sookasa folder.
+
+**Example**
+
+`./file_overload.ps1 c:\Users\richie\Desktop\sookasa 100`
 
 ## Development
 
@@ -114,24 +118,30 @@ If you want to develop the folder-monitor program further, the easiest way is to
 3. Inside the project directory, execute `lein run <options>` to compile and run the program
 4. Inside the project directory, execute `lein uberjar` to create an executable jar file that can be distributed to others
 
-## Bugs
-
-### Large Numbers of Small Files
-
-One of the issues I found while stress testing the application is that it will fail if too many files are added to the folder at once. The limit (on my system) occurred when I tried to simultaneously add more than 500 files to the folder in quick succession, with each file being only a single line in length. I believe this issue is caused simply by blocking IO. Since the files are so small, they're added to the folder before the program can process each event and trigger a rename. Eventually an event is triggered and it encounters a blocked thread, causing a silent failure.
-
-I believe this problem could be solved in two different ways:
-
-1. The standard java IO API is blocking, however, as of Java 7 there is a non-blocking equivalent. Several Clojure wrappers exist for this functionality.
-
-2. Clojure has excellent support for concurrency. A "load balancer" of sorts could be setup where one thread listens for events and delegates the actual filesystem operations to a cluster of "worker threads". This would allow the program to support many more events without file IO serving as a bottleneck. In fact, there is a Clojure library [OJO](https://github.com/rplevy/ojo) that implements filesystem event parallelism automatically.
-
-I didn't implement either of these solutions because they both seemed like overkill for the problem at hand. In practical use, this bug doesn't seem to crop up as once the size of the files becomes a few kilobytes, it doesn't matter how many files are added to the Sookasa folder, the folder-monitor program is able to handle the load because the process of renaming a file becomes much quicker than copying a few kilobytes of data.
+Leiningen handles dependency management and packaging for you.
 
 ## Potential Improvements
 
-1. Add support for concurrency / parallelism or non-blocking IO
-2. Using a simple text file for logging purposes has the simple advantage of being easy to read and parse/filter using traditional UNIX utilities, however, if I was expecting heavy monitoring / debugging of this program I might consider converting the logging functionality to a simple SQLite database.
-3. Perform a single check of every file in the monitored folder on program start so that files that are improperly named and are already present in the folder are renamed, not just files that are added/changed after the program has started running. This would be pretty trivial to add as a feature, 90% of the needed functionality is already written it would simply be a matter of getting a list of all files currently in the directory when the application starts, but I decided not to include it because I wasn't sure if it really fit with the purpose of this program. That being said, I left some comments in the code on how that feature could be implemented if it became necessary.
-4. Improve the robustness of the regular expressions used to identify improperly named folders. I would also recommend a lot more tests surrounding this particular feature. The regular expressions used throughout folder-monitor are the "bare minimum" to get it working and could be made much more robust.
-5. Even listeners are not automatically removed for folders that are deleted. I didn't investigate the performance implications of this too thoroughly, but it would be something to keep in mind moving forward.
+### Discrepancies Between Filesystems
+
+Even though the Hawk library presents a seamless interface for monitoring filesystem events, regardless of the operating system, there are still some discrepancies that need to be managed. For example, in OSX and Linux copying a file into a folder triggers a single "create event". In Windows, on the otherhand, that same operation triggers a "create" event, and multiple "modify" events.
+
+This has obvious performance implications (in fact, the application is noticeably slower when running on windows as opposed to Unix operatings ystem), but also subtler ones as well. For example, I originally implemented a logger functionality that kept track of all the events, however, this became an issue when running on windows as the same event would get logged many times.
+
+I can think of two straightforward ways to address this problem:
+
+1. Write operating system specific implementations, or incorporate operating system-specific code into the application itself
+
+2. Implement a message queue where once an event is observed, its added to a set. Duplicate events in a set are not allowed, and events are only processed after a delay. This would be relatively straightforward to implement in Clojure as it has great support for concurrency. This would improve performance on all platforms by preventing the processing of duplicate events and allowing the message queue to be depleted by multiple threads.
+
+### Index Folder on Startup
+
+Perform a single check of every file in the monitored folder on program start so that files that are improperly named and are already present in the folder are renamed, not just files that are added/changed after the program has started running. This would be pretty trivial to add as a feature, 90% of the needed functionality is already written; it would simply be a matter of getting a list of all files currently in the directory when the application starts, but I decided not to include it because I wasn't sure if it really fit with the purpose of this program. That being said, I left some comments in the code on how that feature could be implemented if it became necessary.
+
+### Regular Expressions
+
+Improve the robustness of the regular expressions used to identify improperly named folders. I would also recommend a lot more tests surrounding this particular feature. The regular expressions used throughout folder-monitor are the "bare minimum" to get it working and could be made much more robust.
+
+### Cleaning Up Event Listeners
+
+Event listeners are not automatically removed for folders that are deleted. I didn't investigate the performance implications of this too thoroughly, but it would be something to keep in mind moving forward.

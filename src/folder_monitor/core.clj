@@ -6,11 +6,10 @@
 ; and then run them all through the rename-file function. Those that match the regular
 ; expression pattern will be automatically renamed and those that don't will be left untouched.
 
-; clojure-watch is a simple wrapper around the Java 7 WatchEvent API
+; hawk is a simple wrapper around the Java 7 WatchEvent API and Barbary WatchService API
 ; clojure.java.io is the clojure wrapper around the Java filesystem API
 (ns folder-monitor.core
   (:gen-class)
-  (:require [clojure-watch.core :refer [start-watch]])
   (:require [clojure.java.io :as io] [hawk.core :as hawk]))
 
 ; Compiler boilerplate so functions can be declared in any order
@@ -28,15 +27,16 @@
   ; expects one argument: Which path to watch for file changes
   [path & args]
   ; Starts watching the folder and listening for changes
-  (watch-folder path))
+  (watch-folder path)
+  ; Print to console that watch has started
+  (def log-entry (str "Starting to watch " path))
+  (logger log-entry))
 
 (defn watch-folder
   "Adds a new listener and associated callback for filesystem events at a specified folder"
   [path]
   (hawk/watch! [{:paths [path]
-                 :handler process-file-event}])
-  (def log-entry (str "Starting to watch " path))
-  (logger log-entry))
+                 :handler process-file-event}]))
 
 ; callback function is called everytime a file is created or modified
 (defn process-file-event
@@ -45,21 +45,19 @@
   Else handle renaming."
   [context {event :kind file :file}]
   
-  (println event file)
-  
-    (do
-      (def filename (.toString file))
-      
-      (if (.isDirectory (io/file filename))
-          (do
-            ; if its a directory, watch it for events 
-            (if (= event :create)
-            (watch-folder filename))
-            ; Return for testing purposes
-            (str "Watch added to " filename))
-         ; Else pass the file to the rename function
-        (if (or (= event :modify) (= event :create))
-         (rename-file event filename)))))
+  (do
+    (def filename (.toString file))
+    
+    (if (.isDirectory (io/file filename))
+        (do
+          ; if its a directory, watch it for events 
+          (if (= event :create)
+          (watch-folder filename))
+          ; Return for testing purposes
+          (str "Watch added to " filename))
+       ; Else pass the file to the rename function
+      (if (or (= event :modify) (= event :create))
+       (rename-file event filename)))))
   
 
 (defn rename-file
@@ -89,5 +87,5 @@
 (defn logger
   "Appends input to log file and adds newline"
   [log-entry]
-  (spit "folder-monitor-log.txt" (str log-entry "\n") :append true)
+  ; (spit "folder-monitor-log.txt" (str log-entry "\n") :append true)
   (println log-entry))
