@@ -47,7 +47,7 @@
   
   (println event file)
   
-  (if (= event :create)
+  (if (or (= event :modify) (= event :create))
     (do
       (def filename (.toString file))
       
