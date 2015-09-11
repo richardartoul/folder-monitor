@@ -55,7 +55,8 @@
         ; Return for testing purposes
         (str "Watch added to " filename))
      ; Else pass the file to the rename function
-     (rename-file event filename)))
+     (if (= event :create)
+     (rename-file event filename))))
 
 (defn rename-file
   "Renames incorrectly named files to their proper form"
