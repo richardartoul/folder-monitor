@@ -1,4 +1,4 @@
-(defproject folder-monitor "0.1.0-SNAPSHOT"
+(defproject folder-monitor "1.0.0-SNAPSHOT"
   :description "Folder-Monitor: Monitors a folder for new files and renames them appropriately"
   :url "https://github.com/richardartoul/folder-monitor"
   :license {:name "Eclipse Public License"
