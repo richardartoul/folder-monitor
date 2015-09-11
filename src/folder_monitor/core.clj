@@ -45,6 +45,8 @@
   Else handle renaming."
   [context {event :kind file :file}]
   
+  (println event file)
+  
   (if (= event :create)
     (do
       (def filename (.toString file))
