@@ -45,16 +45,19 @@
   Else handle renaming."
   [context {event :kind file :file}]
   
-  (def filename (.toString file))
+  (if (= event :create)
+    (do
+      (def filename (.toString file))
+      
+      (if (.isDirectory (io/file filename))
+          (do
+            ; if its a directory, watch it for events 
+            (watch-folder filename)
+            ; Return for testing purposes
+            (str "Watch added to " filename))
+         ; Else pass the file to the rename function
+         (rename-file event filename)))))
   
-  (if (.isDirectory (io/file filename))
-      (do
-        ; if its a directory, watch it for events 
-        (watch-folder filename)
-        ; Return for testing purposes
-        (str "Watch added to " filename))
-     ; Else pass the file to the rename function
-     (rename-file event filename)))
 
 (defn rename-file
   "Renames incorrectly named files to their proper form"
