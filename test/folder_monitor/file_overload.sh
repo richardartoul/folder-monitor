@@ -13,10 +13,12 @@ do
   # Create dummy filename
   FILENAME="file$COUNTER.ext(Richie's conflicted copy 2015-09-08).sookasa"
   # Copy test file into sookasa folder with dummy filename
-  cp ./test_files/testImage.jpg "$PATHSOOKASA/$FILENAME"
+  cp ./test_files/testImage.jpg "$PATHSOOKASA/image-$FILENAME"
+  cp ./test_files/testWordDoc.doc "$PATHSOOKASA/doc-$FILENAME"
+  cp ./test_files/testVideo.mp4 "$PATHSOOKASA/video-$FILENAME"
   let COUNTER=COUNTER+1
   # Simulating a 50 millisecond pause to copy each file
-  sleep 0.05
+  # sleep 0.05
 done
 
 # Same as above, but copies files into folder nested within monitored folder
@@ -29,10 +31,12 @@ do
   # Create dummy filename
   FILENAME="file$COUNTER.ext(Richie's conflicted copy 2015-09-08).sookasa"
   # Copy test file into sookasa folder with dummy filename
-  cp ./test_files/testImage.jpg "$PATHSOOKASA/nested/$FILENAME"
+  cp ./test_files/testImage.jpg "$PATHSOOKASA/nested/image-$FILENAME"
+  cp ./test_files/testWordDoc.doc "$PATHSOOKASA/nested/doc-$FILENAME"
+  cp ./test_files/testVideo.mp4 "$PATHSOOKASA/nested/video-$FILENAME"
   let COUNTER=COUNTER+1
   # Simulating a 50 millisecond pause to copy each file
-  sleep 0.05
+  # sleep 0.05
 done
 
 echo "$NUMFILES Files created!"

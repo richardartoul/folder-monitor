@@ -19,8 +19,12 @@ COUNTER=0
 for ((i=0; i < $NUMFILES; i++))
 do
   FILENAME="file$COUNTER(Richie's conflicted copy 2015-09-08).ext.sookasa"
-  rm "$PATHSOOKASA/$FILENAME"
-  rm "$PATHSOOKASA/nested/$FILENAME"
+  rm "$PATHSOOKASA/image-$FILENAME"
+  rm "$PATHSOOKASA/doc-$FILENAME"
+  rm "$PATHSOOKASA/video-$FILENAME"
+  rm "$PATHSOOKASA/nested/image-$FILENAME"
+  rm "$PATHSOOKASA/nested/doc-$FILENAME"
+  rm "$PATHSOOKASA/nested/video-$FILENAME"
   let COUNTER=COUNTER+1
 done
 

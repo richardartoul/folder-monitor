@@ -11,7 +11,7 @@
 (ns folder-monitor.core
   (:gen-class)
   (:require [clojure-watch.core :refer [start-watch]])
-  (:require [clojure.java.io :as io] [hawk.core :as hawk] [org.tobereplaced.nio.file :refer[move! directory?]]))
+  (:require [clojure.java.io :as io] [hawk.core :as hawk]))
 
 ; Compiler boilerplate so functions can be declared in any order
 (declare logger)
@@ -48,7 +48,7 @@
   
   (def filename (.toString file))
   
-  (if (directory? (io/file filename))
+  (if (.isDirectory (io/file filename))
       (do
         ; if its a directory, watch it for events 
         (watch-folder filename)
@@ -56,7 +56,6 @@
         (str "Watch added to " filename))
      ; Else pass the file to the rename function
      (rename-file event filename)))
-
 
 (defn rename-file
   "Renames incorrectly named files to their proper form"
@@ -73,7 +72,7 @@
            (re-matches sookasa-regex filename)]
       (def file-to-create (str short-filename conflict-string extension ".sookasa"))
       ; rename the file
-      (move! (io/file full-filename) 
+      (.renameTo (io/file full-filename) 
                  (io/file file-to-create))
       ; construct the log entry
       (def log-line (str filename " was renamed to " file-to-create " at " (new java.util.Date)))

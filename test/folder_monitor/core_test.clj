@@ -19,4 +19,4 @@
 (deftest add-watch-new-folder-test
   (testing "unit test for the process-file-event function to make sure it registers new watchers for folders added after program starts"
     (.mkdir (io/file "test_folder"))
-    (is (= (process-file-event :create "test_folder") "Watch added to test_folder"))))
+    (is (= (process-file-event nil {:kind :create :file "test_folder"}) "Watch added to test_folder"))))
