@@ -13,14 +13,52 @@
   (:require [clojure-watch.core :refer [start-watch]])
   (:require [clojure.java.io :as io]))
 
+; Compiler boilerplate so functions can be declared in any order
+(declare logger)
+(declare rename-file)
+(declare process-file-event)
+(declare watch-folder)
+
 ; regex for identifying misnamed sookasa files
 ; also includes capturing groups so that filenames can be rearranged programatically
 (def sookasa-regex #"([^.]*)(\..+)(\(.*conflicted copy \d{4}-\d{2}-\d{2}\))\.sookasa")
 
-(defn logger
-  "Appends input to log file and adds newline"
-  [log-entry]
-  (spit "folder-monitor-log.txt" (str log-entry "\n") :append true))
+; main function that gets invoked when application starts
+(defn -main
+  ; expects one argument: Which path to watch for file changes
+  [path & args]
+  ; Starts watching the folder and listening for changes
+  (watch-folder path))
+
+(defn watch-folder
+  "Adds a new listener and associated callback for filesystem events at a specified folder"
+  [path]
+  (start-watch [{:path path
+                 :event-types [:create]
+                 :bootstrap (fn [path] 
+                              (def log-entry (str "Starting to watch " path)) 
+                              (println log-entry)
+                              (logger log-entry))
+                 :callback process-file-event
+                 ; recursively monitor subdirectories
+                 :options {:recursive true}}]))
+
+; callback function is called everytime a file is created or modified
+(defn process-file-event
+  "Determine if new file is a file or folder. 
+  If its a folder, adds it to the list of folders to watch. 
+  Else handle renaming."
+  [event filename]
+  
+  (if (.isDirectory (io/file filename))
+      (do
+        ; if its a directory, watch it for events 
+        (watch-folder filename)
+        ; Return for testing purposes
+        (str "Watch added to " filename))
+     ; Else pass the file to the rename function
+     (rename-file event filename)))
+
 
 (defn rename-file
   "Renames incorrectly named files to their proper form"
@@ -51,39 +89,7 @@
     ; returns nil if the file wasn't renamed
     nil))
 
-; callback function is called everytime a file is created or modified
-(defn process-file-event
-  "Determine if new file is a file or folder. 
-  If its a folder, adds it to the list of folders to watch. 
-  Else handle renaming."
-  [event filename]
-  
-  (if (.isDirectory (io/file filename))
-      (do 
-        (start-watch [{:path filename
-                    :event-types [:create]
-                    :bootstrap (fn [path]
-                                 (def log-entry (str "Starting to watch " filename)) 
-                                 (println log-entry)
-                                 (logger log-entry))
-                    :callback process-file-event
-                    :options {:recursive true}}])
-        ; Return for testing purposes
-        (str "Watch added to " filename))
-     (rename-file event filename)))
-
-
-; main function that gets invoked when application starts
-(defn -main
-  ; expects one argument: Which path to watch for file changes
-  [watch-folder & args]
-  ; Starts watching the folder and listening for changes
-  (start-watch [{:path watch-folder
-                 :event-types [:create]
-                 :bootstrap (fn [path] 
-                              (def log-entry (str "Starting to watch " path)) 
-                              (println log-entry)
-                              (logger log-entry))
-                 :callback process-file-event
-                 ; recursively monitor subdirectories
-                 :options {:recursive true}}]))
+(defn logger
+  "Appends input to log file and adds newline"
+  [log-entry]
+  (spit "folder-monitor-log.txt" (str log-entry "\n") :append true))
