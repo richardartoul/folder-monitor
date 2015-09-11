@@ -5,7 +5,6 @@ PATHSOOKASA=$1
 NUMFILES=$2
 
 mkdir "$PATHSOOKASA/nested"
-sleep 2
 
 COUNTER=0
 # create number of files based on second command line argument
@@ -16,6 +15,8 @@ do
   # Copy test file into sookasa folder with dummy filename
   cp ./test_files/testImage.jpg "$PATHSOOKASA/$FILENAME"
   let COUNTER=COUNTER+1
+  # Simulating a 50 millisecond pause to copy each file
+  sleep 0.05
 done
 
 # Same as above, but copies files into folder nested within monitored folder
@@ -30,6 +31,8 @@ do
   # Copy test file into sookasa folder with dummy filename
   cp ./test_files/testImage.jpg "$PATHSOOKASA/nested/$FILENAME"
   let COUNTER=COUNTER+1
+  # Simulating a 50 millisecond pause to copy each file
+  sleep 0.05
 done
 
 echo "$NUMFILES Files created!"

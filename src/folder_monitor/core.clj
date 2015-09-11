@@ -34,7 +34,10 @@
   "Adds a new listener and associated callback for filesystem events at a specified folder"
   [path]
   (hawk/watch! [{:paths [path]
-                 :handler process-file-event}]))
+                 :handler process-file-event}])
+  (def log-entry (str "Starting to watch " path))
+  (println log-entry)
+  (logger log-entry))
 
 ; callback function is called everytime a file is created or modified
 (defn process-file-event
